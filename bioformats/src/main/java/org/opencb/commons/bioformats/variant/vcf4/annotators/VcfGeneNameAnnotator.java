@@ -39,8 +39,10 @@ public class VcfGeneNameAnnotator implements VcfAnnotator {
                     variant.getPosition() == effect.getPosition() &&
                     variant.getReference().equals(effect.getReferenceAllele()) &&
                     variant.getAlternate().equals(effect.getAlternativeAllele())) {
-
-                geneNames.add(effect.getGeneName());
+            	// check that the effect gene name is not an empty string
+            	if (effect.getGeneName() != null && !effect.getGeneName().equals("")) {
+            		geneNames.add(effect.getGeneName());
+            	}
             }
 
         }
