@@ -17,6 +17,8 @@ import java.util.Set;
  * To change this template use File | Settings | File Templates.
  */
 public class VcfGeneNameAnnotator implements VcfAnnotator {
+	
+	public static final String GENE_NAMES_TAG = "GeneNames";
 
     @Override
     public void annot(List<VcfRecord> batch) {
@@ -36,9 +38,7 @@ public class VcfGeneNameAnnotator implements VcfAnnotator {
         for (VariantEffect effect : batchEffect) {
 
             if (variant.getChromosome().equals(effect.getChromosome()) &&
-                    variant.getPosition() == effect.getPosition() &&
-                    variant.getReference().equals(effect.getReferenceAllele()) &&
-                    variant.getAlternate().equals(effect.getAlternativeAllele())) {
+                    variant.getPosition() == effect.getPosition()) {
             	// check that the effect gene name is not an empty string
             	if (effect.getGeneName() != null && !effect.getGeneName().equals("")) {
             		geneNames.add(effect.getGeneName());
@@ -50,7 +50,7 @@ public class VcfGeneNameAnnotator implements VcfAnnotator {
         String geneNamesAll = Joiner.on(",").join(geneNames);
 
         if (geneNames.size() > 0) {
-            variant.addInfoField("GeneNames=" + geneNamesAll);
+            variant.addInfoField(GENE_NAMES_TAG + "=" + geneNamesAll);
         }
 
     }
