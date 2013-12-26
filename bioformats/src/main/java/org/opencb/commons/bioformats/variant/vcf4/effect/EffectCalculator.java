@@ -51,7 +51,7 @@ public class EffectCalculator {
     //        Response response = webTarget.path("consequence_type").queryParam("of", "json").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(formDataMultiPart.toString(), MediaType.MULTIPART_FORM_DATA_TYPE));
             response = webResource.path("consequence_type").queryParam("of", "json").type(MediaType.MULTIPART_FORM_DATA).post(String.class, formDataMultiPart);
         } catch (Exception ex) {
-            System.ing consequence type: " + ex.getClass() + ": " + ex.getMessage());
+            System.err.println("Error obtaining consequence type: " + ex.getClass() + ": " + ex.getMessage());
         }
 
         // TODO aaleman: Check the new Web Service
