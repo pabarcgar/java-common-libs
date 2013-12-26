@@ -46,16 +46,22 @@ public class EffectCalculator {
         FormDataMultiPart formDataMultiPart = new FormDataMultiPart();
         formDataMultiPart.field("variants", chunkVcfRecords.substring(0, chunkVcfRecords.length() - 1));
 
-//        Response response = webTarget.path("consequence_type").queryParam("of", "json").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(formDataMultiPart.toString(), MediaType.MULTIPART_FORM_DATA_TYPE));
-        String response = webResource.path("consequence_type").queryParam("of", "json").type(MediaType.MULTIPART_FORM_DATA).post(String.class, formDataMultiPart);
+        String response = null;
+        try {
+    //        Response response = webTarget.path("consequence_type").queryParam("of", "json").request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(formDataMultiPart.toString(), MediaType.MULTIPART_FORM_DATA_TYPE));
+            response = webResource.path("consequence_type").queryParam("of", "json").type(MediaType.MULTIPART_FORM_DATA).post(String.class, formDataMultiPart);
+        } catch (Exception ex) {
+            System.ing consequence type: " + ex.getClass() + ": " + ex.getMessage());
+        }
 
         // TODO aaleman: Check the new Web Service
-
-        try {
-            batchEffect = mapper.readValue(response.toString(), mapper.getTypeFactory().constructCollectionType(List.class, VariantEffect.class));
-        } catch (IOException e) {
-            System.err.println(chunkVcfRecords.toString());
-            e.printStackTrace();
+        if (response != null) {
+            try {
+                batchEffect = mapper.readValue(response.toString(), mapper.getTypeFactory().constructCollectionType(List.class, VariantEffect.class));
+            } catch (IOException e) {
+                System.err.println(chunkVcfRecords.toString());
+                e.printStackTrace();
+            }
         }
 
         return batchEffect;
