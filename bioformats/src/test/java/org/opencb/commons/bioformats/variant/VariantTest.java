@@ -70,8 +70,8 @@ public class VariantTest extends GenericTest {
                 sample2Data = new HashMap<>();
         sample1Data.put(Variant.GENOTYPE_TAG, "0/1");
         sample2Data.put(Variant.GENOTYPE_TAG, "1/2");
-        testVariant.addSampleData("s1", sample1Data);
-        testVariant.addSampleData("s2", sample2Data);
+        testVariant.addSampleData(sample1, sample1Data);
+        testVariant.addSampleData(sample2, sample2Data);
 
     }
 
