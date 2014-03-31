@@ -39,9 +39,9 @@ public class VariantCaseControlDominantAnnotator implements VariantAnnotator {
                     // Get the genotype of the GT atribute
                     Genotype genotype = new Genotype(variant.getSampleData(sample, "GT"));
 
-                    if(!genotype.get){
+                    //if(!genotype.get){
                         isMutatedInControls = true;
-                    }
+                    //}
                 }
 
                 // If the variant is mutated in a control, set its score to 0
