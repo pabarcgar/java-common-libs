@@ -10,9 +10,13 @@ import org.opencb.commons.bioformats.variant.utils.stats.VariantStats;
 import org.opencb.commons.test.GenericTest;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Alejandro Aleman Ramos <aaleman@cipf.es>
@@ -21,6 +25,10 @@ public class VariantTest extends GenericTest {
 
     private Variant v1;
     private Variant v2;
+    private Variant testVariant;
+
+    private String sample1 = "s1";
+    private String sample2 = "s2";
 
     @Override
     @Before
@@ -55,6 +63,15 @@ public class VariantTest extends GenericTest {
                 "5KB_downstream_variant", "Within 5 kb downstream of the 3 prime end of a transcript", "feature", -1, "", "");
         v1.setEffect(Arrays.asList(eff1, eff2));
         v2.setEffect(Arrays.asList(eff3));
+
+        // create variant with sample data
+        testVariant = new Variant("chr1", 10000, "T", "C,G");
+        Map<String, String> sample1Data = new HashMap<>(),
+                sample2Data = new HashMap<>();
+        sample1Data.put(Variant.GENOTYPE_TAG, "0/1");
+        sample2Data.put(Variant.GENOTYPE_TAG, "1/2");
+        testVariant.addSampleData("s1", sample1Data);
+        testVariant.addSampleData("s2", sample2Data);
 
     }
 
@@ -135,6 +152,23 @@ public class VariantTest extends GenericTest {
         v1.setId("rsTEST");
         assertEquals(v1.getId(), "rsTEST");
 
+    }
+
+    @Test
+    public void testSampleHasAllele() throws Exception {
+        // check if variant has alleles 1 and 2 for samples s1 and s2
+        int allele1 = 1,
+                allele2 = 2;
+        Boolean sample1HasAllele1 = testVariant.sampleHasAllele(sample1, allele1);
+        Boolean sample1HasAllele2 = testVariant.sampleHasAllele(sample1, allele2);
+        Boolean sample2HasAllele1 = testVariant.sampleHasAllele(sample2, allele1);
+        Boolean sample2HasAllele2 = testVariant.sampleHasAllele(sample2, allele2);
+
+        // assert results
+        assertTrue("Sample s1 has allele '1'", sample1HasAllele1);
+        assertFalse("Sample s1 doesn't have allele '2'",sample1HasAllele2);
+        assertTrue("Sample s2 has allele '1'", sample2HasAllele1);
+        assertTrue("Sample s2 has allele '2'", sample2HasAllele2);
     }
 
     @Test

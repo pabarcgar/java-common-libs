@@ -2,6 +2,8 @@ package org.opencb.commons.bioformats.variant;
 
 import java.util.*;
 
+import org.opencb.commons.bioformats.feature.AllelesCode;
+import org.opencb.commons.bioformats.feature.Genotype;
 import org.opencb.commons.bioformats.variant.utils.effect.VariantEffect;
 import org.opencb.commons.bioformats.variant.utils.stats.VariantStats;
 
@@ -18,6 +20,9 @@ public class Variant {
     private Map<String, Map<String, String>> samplesData;
     private VariantStats stats;
     private List<VariantEffect> effect;
+
+    /** Genotype tag in sample data */
+    public static final String GENOTYPE_TAG = "GT";
 
     /**
      * Optional attributes that probably depend on the format of the file the
@@ -94,6 +99,17 @@ public class Variant {
 
     public Map<String, String> getSampleData(String sampleName) {
         return samplesData.get(sampleName);
+    }
+
+    public boolean sampleHasAllele(String sample, Integer alleleIndex) {
+        boolean hasAllele = false;
+        Genotype sampleGenotype = new Genotype(this.getSampleData(sample, "GT"));
+        if (sampleGenotype.getCode() != AllelesCode.ALL_ALLELES_MISSING &&
+                (sampleGenotype.getAllele1() == alleleIndex || sampleGenotype.getAllele2() == alleleIndex))
+        {
+            hasAllele = true;
+        }
+        return hasAllele;
     }
 
     public VariantStats getStats() {

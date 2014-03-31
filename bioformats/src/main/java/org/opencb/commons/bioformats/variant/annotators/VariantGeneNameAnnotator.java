@@ -32,11 +32,11 @@ public class VariantGeneNameAnnotator implements VariantAnnotator {
         for (VariantEffect effect : batchEffect) {
 
             if (variant.getChromosome().equals(effect.getChromosome()) &&
-                    variant.getPosition() == effect.getPosition() &&
-                    variant.getReference().equals(effect.getReferenceAllele()) &&
-                    variant.getAlternate().equals(effect.getAlternativeAllele())) {
-
-                geneNames.add(effect.getGeneName());
+                    variant.getPosition() == effect.getPosition()) {
+            	// check that the effect gene name is not an empty string
+            	if (effect.getGeneName() != null && !effect.getGeneName().equals("")) {
+            		geneNames.add(effect.getGeneName());
+            	}
             }
 
         }

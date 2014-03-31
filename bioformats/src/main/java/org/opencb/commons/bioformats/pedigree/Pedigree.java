@@ -64,6 +64,20 @@ public class Pedigree {
         this.getFamilies().put(familyId, family);
     }
 
+    /**
+     * Get the individuals that have the specified condition
+     * @param condition
+     * @return
+     */
+    public Set<String> getIndividuals(Condition condition) {
+        Set<String> individuals = new HashSet<>();
+        for (String individualId : this.getIndividuals().keySet()) {
+            if (this.getIndividual(individualId).getCondition() == condition) {
+                individuals.add(individualId);
+            }
+        }
+        return individuals;
+    }
 
     @Override
     public String toString() {
