@@ -1,10 +1,11 @@
-package org.opencb.commons.bioformats.variant.filters;
+package org.opencb.commons.bioformats.variant.annotators;
 
 import org.opencb.commons.bioformats.feature.AllelesCode;
 import org.opencb.commons.bioformats.feature.Genotype;
 import org.opencb.commons.bioformats.pedigree.Condition;
 import org.opencb.commons.bioformats.pedigree.Pedigree;
 import org.opencb.commons.bioformats.variant.Variant;
+import org.opencb.commons.bioformats.variant.filters.VariantGeneLevelFilter;
 import org.opencb.commons.bioformats.variant.utils.VariantUtils;
 
 import java.util.*;
@@ -12,25 +13,43 @@ import java.util.*;
 /**
  * Created by parce on 12/30/13.
  */
-public class VariantCompoundHeterozygosityFilter extends VariantGeneLevelFilter {
+public class VariantCompoundHeterozygosityAnnotator implements VariantAnnotator {
 
     private Set<String> affectedIndividuals;
     private Set<String> unaffectedIndividuals;
 
     //private Map<Variant,Set<Integer>> sharedAllelesMap;
 
-    public VariantCompoundHeterozygosityFilter(Pedigree pedigree) {
+    public static final String COMPOUND_HETEROZYGOUS_TAG = "CH";
+
+    public VariantCompoundHeterozygosityAnnotator(Pedigree pedigree) {
         super();
-        this.readPedigree(pedigree);
+        this.affectedIndividuals = pedigree.getIndividuals(Condition.AFFECTED);
+        this.unaffectedIndividuals = pedigree.getIndividuals(Condition.UNAFFECTED);
     }
 
-//    // TODO: parece que este constructor no se usa
-//    public VariantCompoundHeterozygosityFilter(Set<String> affectedIndividuals, Set<String> unaffectedIndividuals) {
-//        this();
-//        this.affectedIndividuals = affectedIndividuals;
-//        this.unaffectedIndividuals = unaffectedIndividuals;
-//    }
+    @Override
+    public void annot(List<Variant> batch) {
+        // TODO: cambiar nombre variable y metodo
+        // TODO: list o set, y tipo de list, o null
+        List<Variant> variantsWhoPassedBothFilters = new ArrayList<>();
+        Map<Variant,Set<Integer>> sharedAllelesMap = new HashMap<>();
+        List<Variant> variantsWhoPassedTheFirstFilter = affectedSamplesSharedAllelesHomozygousInUnaffectedSamplesFilter(batch, sharedAllelesMap);
+        if (variantsWhoPassedTheFirstFilter.size() > 1) {
+            for (Variant variant : compoundHeterozygosityFilter(variantsWhoPassedTheFirstFilter, sharedAllelesMap)) {
+                // TODO: change the annotation 'true' to a score
+                // TODO: check that the variants in the batch are actually being annotated
+                variant.addAttribute(COMPOUND_HETEROZYGOUS_TAG, "true");
+            }
+        }
+    }
 
+    @Override
+    public void annot(Variant elem) {
+        throw new UnsupportedOperationException("Variant Compound Heterozygosity annotator cannot be applied to individual variants");
+    }
+
+    @Deprecated
     public List<Variant> apply(List<Variant> variantsToBeFiltered) {
         // TODO: cambiar nombre variable y metodo
         // TODO: list o set, y tipo de list, o null
@@ -39,6 +58,8 @@ public class VariantCompoundHeterozygosityFilter extends VariantGeneLevelFilter 
         List<Variant> variantsWhoPassedTheFirstFilter = affectedSamplesSharedAllelesHomozygousInUnaffectedSamplesFilter(variantsToBeFiltered, sharedAllelesMap);
         if (variantsWhoPassedTheFirstFilter.size() > 1) {
             variantsWhoPassedBothFilters.addAll(compoundHeterozygosityFilter(variantsWhoPassedTheFirstFilter, sharedAllelesMap));
+            // TODO: aqui habria que anotar
+            //anotame(compoundHeterozygosityFilter(variantsToBeFiltered, variantsWhoPassedTheFirstFilter, sharedAllelesMap));
         }
 
         return variantsWhoPassedBothFilters;
@@ -76,6 +97,7 @@ public class VariantCompoundHeterozygosityFilter extends VariantGeneLevelFilter 
             Variant firstVariant = pair[0];
             Variant secondVariant = pair[1];
             // check if both variants from the pair has already passed the filter
+            // TODO: comprobar si merece la pena hacer esta comprobacion o se esta tardando mas tiempo
             if (!passedVariants.contains(firstVariant) || !passedVariants.contains(secondVariant)) {
                 // combinaciones de alelos entre
                 Set<Integer> allelesFirstVariant = sharedAllelesMap.get(firstVariant);
@@ -120,19 +142,4 @@ public class VariantCompoundHeterozygosityFilter extends VariantGeneLevelFilter 
         }
         return pairs;
     }
-
-    // TODO: ¿metodos para devolver estos conjuntos en la clase Pedigree?
-    public void readPedigree(Pedigree pedigree) {
-        this.affectedIndividuals = new HashSet<>();
-        this.unaffectedIndividuals = new HashSet<>();
-        for (String individualId : pedigree.getIndividuals().keySet()) {
-            if (pedigree.getIndividual(individualId).getCondition() == Condition.AFFECTED) {
-                this.affectedIndividuals.add(individualId);
-            } else if (pedigree.getIndividual(individualId).getCondition() == Condition.UNAFFECTED) {
-                this.unaffectedIndividuals.add(individualId);
-            }
-        }
-    }
-
-
 }

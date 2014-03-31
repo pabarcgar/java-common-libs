@@ -1,16 +1,11 @@
 package org.opencb.commons.bioformats.variant;
 
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
 import org.junit.Before;
 import org.junit.Test;
-import org.opencb.commons.bioformats.variant.filters.VariantCompoundHeterozygosityFilter;
 import org.opencb.commons.test.GenericTest;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
