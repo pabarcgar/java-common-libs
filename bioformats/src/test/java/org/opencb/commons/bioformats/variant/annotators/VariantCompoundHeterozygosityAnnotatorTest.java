@@ -21,27 +21,23 @@ import java.util.*;
 public class VariantCompoundHeterozygosityAnnotatorTest extends GenericTest {
 
     @Mocked Pedigree pedigree;
-    @Mocked Individual ind1;
-    @Mocked Individual ind2;
-    @Mocked Individual ind3;
-    @Mocked Individual ind4;
 
     // variants to do the tests
-    private Variant oneHomozygousUnaffectedSampleVariant = new Variant(null, 0, null, null);
-    private Variant twoHomozygousSampleVariant = new Variant(null, 0, null, null);
-    private Variant sharingOneAlleleVariant = new Variant(null, 0, null, null);
-    private Variant sharingOneAlleleVariantB = new Variant(null, 0, null, null);
-    private Variant sharingTwoAllelesVariant = new Variant(null, 0, null, null);
-    private Variant notSharedAllelesVariant = new Variant(null, 0, null, null);
-    private Variant missingValuesInUnaffectedVariant = new Variant(null, 0, null, null);
-    private Variant noAlternativeAffectedSampleVariant = new Variant(null, 0, null, null);
-    private Variant allAffectedMissingValues = new Variant(null, 0, null, null);
-    private Variant homozygousUnaffectedButNotForAffectedSharedAllele = new Variant(null, 0, null, null);
-    private Variant twoSharedAllelesAreHomozygousInUnaffectedVariant = new Variant(null, 0, null, null);
-    private Variant twoSharedAllelesOneHomozygousInUnaffectedVariant = new Variant(null, 0, null, null);
-    private Variant multiVariantFilterA = new Variant(null, 0, null, null);
-    private Variant multiVariantFilterB = new Variant(null, 0, null, null);
-    private Variant multiVariantFilterC = new Variant(null, 0, null, null);
+    private Variant oneHomozygousUnaffectedSampleVariant = new Variant("chr1", 0, null, null);
+    private Variant twoHomozygousSampleVariant = new Variant("chr1", 0, null, null);
+    private Variant sharingOneAlleleVariant = new Variant("chr1", 0, null, null);
+    private Variant sharingOneAlleleVariantB = new Variant("chr1", 0, null, null);
+    private Variant sharingTwoAllelesVariant = new Variant("chr1", 0, null, null);
+    private Variant notSharedAllelesVariant = new Variant("chr1", 0, null, null);
+    private Variant missingValuesInUnaffectedVariant = new Variant("chr1", 0, null, null);
+    private Variant noAlternativeAffectedSampleVariant = new Variant("chr1", 0, null, null);
+    private Variant allAffectedMissingValues = new Variant("chr1", 0, null, null);
+    private Variant homozygousUnaffectedButNotForAffectedSharedAllele = new Variant("chr1", 0, null, null);
+    private Variant twoSharedAllelesAreHomozygousInUnaffectedVariant = new Variant("chr1", 0, null, null);
+    private Variant twoSharedAllelesOneHomozygousInUnaffectedVariant = new Variant("chr1", 0, null, null);
+    private Variant multiVariantFilterA = new Variant("chr1", 0, null, null);
+    private Variant multiVariantFilterB = new Variant("chr1", 0, null, null);
+    private Variant multiVariantFilterC = new Variant("chr1", 0, null, null);
 
     private final String sample1 = "s1";
     private final String sample2 = "s2";
@@ -72,21 +68,14 @@ public class VariantCompoundHeterozygosityAnnotatorTest extends GenericTest {
         samples1to3.add(sample3);
 
         new NonStrictExpectations() {{
-            // record pedigree and individuals
-            ind1.getCondition(); result = Condition.AFFECTED;
-            ind2.getCondition(); result = Condition.AFFECTED;
-            ind3.getCondition(); result = Condition.UNAFFECTED;
-            ind4.getCondition(); result = Condition.UNAFFECTED;
-            Map<String, Individual> individuals = new HashMap<>();
-            individuals.put("s1", ind1);
-            individuals.put("s2", ind2);
-            individuals.put("s3", ind3);
-            individuals.put("s4", ind4);
-            pedigree.getIndividuals(); result = individuals;
-            pedigree.getIndividual("s1"); result = ind1;
-            pedigree.getIndividual("s2"); result = ind2;
-            pedigree.getIndividual("s3"); result = ind3;
-            pedigree.getIndividual("s4"); result = ind4;
+            Set<String> affectedIndividuals = new HashSet<>();
+            affectedIndividuals.add(sample1);
+            affectedIndividuals.add(sample2);
+            Set<String> unaffectedIndividuals = new HashSet<>();
+            unaffectedIndividuals.add(sample3);
+            unaffectedIndividuals.add(sample4);
+            pedigree.getIndividuals(Condition.AFFECTED);result = affectedIndividuals;
+            pedigree.getIndividuals(Condition.UNAFFECTED);result = unaffectedIndividuals;
         }};
 
         // genotypes
