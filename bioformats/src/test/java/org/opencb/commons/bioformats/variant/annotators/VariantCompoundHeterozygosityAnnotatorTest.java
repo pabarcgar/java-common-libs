@@ -4,13 +4,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import mockit.*;
 import org.opencb.commons.bioformats.pedigree.Condition;
-import org.opencb.commons.bioformats.pedigree.Individual;
 import org.opencb.commons.bioformats.pedigree.Pedigree;
 import org.opencb.commons.bioformats.variant.Variant;
-import org.opencb.commons.bioformats.variant.annotators.VariantCompoundHeterozygosityAnnotator;
 import org.opencb.commons.test.GenericTest;
 
 import java.util.*;
@@ -26,7 +23,6 @@ public class VariantCompoundHeterozygosityAnnotatorTest extends GenericTest {
     private Variant oneHomozygousUnaffectedSampleVariant = new Variant("chr1", 0, null, null);
     private Variant twoHomozygousSampleVariant = new Variant("chr1", 0, null, null);
     private Variant sharingOneAlleleVariant = new Variant("chr1", 0, null, null);
-    private Variant sharingOneAlleleVariantB = new Variant("chr1", 0, null, null);
     private Variant sharingTwoAllelesVariant = new Variant("chr1", 0, null, null);
     private Variant notSharedAllelesVariant = new Variant("chr1", 0, null, null);
     private Variant missingValuesInUnaffectedVariant = new Variant("chr1", 0, null, null);
@@ -35,9 +31,13 @@ public class VariantCompoundHeterozygosityAnnotatorTest extends GenericTest {
     private Variant homozygousUnaffectedButNotForAffectedSharedAllele = new Variant("chr1", 0, null, null);
     private Variant twoSharedAllelesAreHomozygousInUnaffectedVariant = new Variant("chr1", 0, null, null);
     private Variant twoSharedAllelesOneHomozygousInUnaffectedVariant = new Variant("chr1", 0, null, null);
-    private Variant multiVariantFilterA = new Variant("chr1", 0, null, null);
-    private Variant multiVariantFilterB = new Variant("chr1", 0, null, null);
-    private Variant multiVariantFilterC = new Variant("chr1", 0, null, null);
+    private Variant annotTestVariant1 = new Variant("chr1", 1, "A", "T");
+    private Variant annotTestVariant2 = new Variant("chr1", 2, "C", "G");
+    private Variant annotTestVariant3 = new Variant("chr1", 3, "T", "A");
+    private Variant annotTestVariant4 = new Variant("chr1", 4, "G", "C");
+    private Variant annotTestVariant5 = new Variant("chr1", 5, "A", "AC");
+    private Variant annotTestVariant6 = new Variant("chr1", 6, "GC", "C");
+    private Variant annotTestVariant7 = new Variant("chr1", 7, "A", "G,T");
 
     private final String sample1 = "s1";
     private final String sample2 = "s2";
@@ -125,11 +125,6 @@ public class VariantCompoundHeterozygosityAnnotatorTest extends GenericTest {
         sharingOneAlleleVariant.addSampleData(sample2, genotype11);
         sharingOneAlleleVariant.addSampleData(sample3, genotype01);
         sharingOneAlleleVariant.addSampleData(sample4, genotype02);
-        // sharing one allele variant B genotypes
-        sharingOneAlleleVariantB.addSampleData(sample1, genotype12);
-        sharingOneAlleleVariantB.addSampleData(sample2, genotype11);
-        sharingOneAlleleVariantB.addSampleData(sample3, genotype02);
-        sharingOneAlleleVariantB.addSampleData(sample4, genotype01);
         // affected samples share one allele and one unaffected sample is homozygous for a diferent allele Variant genotypes
         homozygousUnaffectedButNotForAffectedSharedAllele.addSampleData(sample1, genotype01);
         homozygousUnaffectedButNotForAffectedSharedAllele.addSampleData(sample2, genotype01);
@@ -155,29 +150,40 @@ public class VariantCompoundHeterozygosityAnnotatorTest extends GenericTest {
         twoSharedAllelesAreHomozygousInUnaffectedVariant.addSampleData(sample2, genotype12);
         twoSharedAllelesAreHomozygousInUnaffectedVariant.addSampleData(sample3, genotype11);
         twoSharedAllelesAreHomozygousInUnaffectedVariant.addSampleData(sample4, genotype22);
-        // multivariant filter variant tests
-        multiVariantFilterA.addSampleData(sample1, genotype12);
-        multiVariantFilterA.addSampleData(sample2, genotype12);
-        multiVariantFilterA.addSampleData(sample3, genotype01);
-        multiVariantFilterA.addSampleData(sample4, genotype02);
-        multiVariantFilterB.addSampleData(sample1, genotype01);
-        multiVariantFilterB.addSampleData(sample2, genotype01);
-        multiVariantFilterB.addSampleData(sample3, genotype01);
-        multiVariantFilterB.addSampleData(sample4, genotype01);
-        multiVariantFilterC.addSampleData(sample1, genotype01);
-        multiVariantFilterC.addSampleData(sample2, genotype01);
-        multiVariantFilterC.addSampleData(sample3, genotype01);
-        multiVariantFilterC.addSampleData(sample4, genotype00);
+        // annotation test variants
+        annotTestVariant1.addSampleData(sample1, genotype12);
+        annotTestVariant1.addSampleData(sample2, genotype11);
+        annotTestVariant1.addSampleData(sample3, genotype01);
+        annotTestVariant1.addSampleData(sample4, genotype02);
+        annotTestVariant2.addSampleData(sample1, genotype11);
+        annotTestVariant2.addSampleData(sample2, genotypeMissingValue);
+        annotTestVariant2.addSampleData(sample3, genotypeMissingValue);
+        annotTestVariant2.addSampleData(sample4, genotypeMissingValue);
+        annotTestVariant3.addSampleData(sample1, genotype12);
+        annotTestVariant3.addSampleData(sample2, genotype12);
+        annotTestVariant3.addSampleData(sample3, genotype12);
+        annotTestVariant3.addSampleData(sample4, genotype12);
+        annotTestVariant4.addSampleData(sample1, genotype12);
+        annotTestVariant4.addSampleData(sample2, genotype12);
+        annotTestVariant4.addSampleData(sample3, genotype22);
+        annotTestVariant4.addSampleData(sample4, genotype12);
+        annotTestVariant5.addSampleData(sample1, genotype12);
+        annotTestVariant5.addSampleData(sample2, genotype12);
+        annotTestVariant5.addSampleData(sample3, genotype01);
+        annotTestVariant5.addSampleData(sample4, genotype02);
+        annotTestVariant6.addSampleData(sample1, genotype01);
+        annotTestVariant6.addSampleData(sample2, genotype01);
+        annotTestVariant6.addSampleData(sample3, genotype01);
+        annotTestVariant6.addSampleData(sample4, genotype01);
+        annotTestVariant7.addSampleData(sample1, genotype01);
+        annotTestVariant7.addSampleData(sample2, genotype01);
+        annotTestVariant7.addSampleData(sample3, genotype01);
+        annotTestVariant7.addSampleData(sample4, genotype00);
     }
 
     @After
     public void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    @Test
-    public void testAnnot() throws Exception {
-        // TODO: implementar este test
     }
 
     @Test
@@ -199,108 +205,142 @@ public class VariantCompoundHeterozygosityAnnotatorTest extends GenericTest {
         variantsToBeFiltered.add(twoSharedAllelesOneHomozygousInUnaffectedVariant);
         variantsToBeFiltered.add(twoSharedAllelesAreHomozygousInUnaffectedVariant);
 
+        // give names to the variants and print them
+        String missingValuesInUnaffectedVariantName = "'Missing values in all unaffected samples'";
+        printVariantFilterTest(missingValuesInUnaffectedVariant, true, missingValuesInUnaffectedVariantName, true);
+        String notSharedAllelesVariantName = "'Not shared alleles between affected samples'";
+        printVariantFilterTest(notSharedAllelesVariant, false, notSharedAllelesVariantName, false);
+        String oneHomozygousUnaffectedSampleVariantName = "'One homozygous unaffected sample'";
+        printVariantFilterTest(oneHomozygousUnaffectedSampleVariant, false, oneHomozygousUnaffectedSampleVariantName, false);
+        String noAlternativeAffectedSampleVariantName = "'No alternative alleles in affected sample'";
+        printVariantFilterTest(noAlternativeAffectedSampleVariant, false, noAlternativeAffectedSampleVariantName, false);
+        String twoHomozygousSampleVariantName = "'Two homozygous affected samples not sharing alleles'";
+        printVariantFilterTest(twoHomozygousSampleVariant, false, twoHomozygousSampleVariantName, false);
+        String sharingOneAlleleVariantName = "'Affected samples sharing one allele not homozyguos in unaffected'";
+        printVariantFilterTest(sharingOneAlleleVariant, true, sharingOneAlleleVariantName, false);
+        String allAffectedMissingValuesName = "'All affected missing values'";
+        printVariantFilterTest(allAffectedMissingValues, false, allAffectedMissingValuesName, false);
+        String homozygousUnaffectedButNotForAffectedSharedAlleleName = "'Affected samples sharing one allele and a different allele is homozyguos in unaffected'";
+        printVariantFilterTest(homozygousUnaffectedButNotForAffectedSharedAllele, true, homozygousUnaffectedButNotForAffectedSharedAlleleName, false);
+        String sharingTwoAllelesVariantName = "'All samples sharing two alleles'";
+        printVariantFilterTest(sharingTwoAllelesVariant, true, sharingTwoAllelesVariantName, false);
+        String twoSharedAllelesOneHomozygousInUnaffectedVariantName = "'Affected samples sharing two alleles and one of them is homozyougs in some unaffected sample'";
+        printVariantFilterTest(twoSharedAllelesOneHomozygousInUnaffectedVariant, true, twoSharedAllelesOneHomozygousInUnaffectedVariantName, false);
+        String twoSharedAllelesAreHomozygousInUnaffectedVariantName = "'all affected share two alleles and both of them are homozygous in some unaffected sample'";
+        printVariantFilterTest(twoSharedAllelesAreHomozygousInUnaffectedVariant, false, twoSharedAllelesAreHomozygousInUnaffectedVariantName, false);
+
         // tested method executions
         // private List<Variant> affectedSamplesSharedAllelesHomozygousInUnaffectedSamplesFilter(List<Variant> variantsToBeFiltered, sharedAllelesMap)
         List<Variant> filteredVariants = Deencapsulation.invoke(annotator, "affectedSamplesSharedAllelesHomozygousInUnaffectedSamplesFilter", variantsToBeFiltered, sharedAllelesMap);
 
         // assert results
-        Assert.assertTrue("'Missing values in all unaffected samples' variant should pass the filter",
+        Assert.assertTrue(missingValuesInUnaffectedVariantName + " variant should pass the filter",
                 filteredVariants.contains(missingValuesInUnaffectedVariant) &&
                         sharedAllelesMap.get(missingValuesInUnaffectedVariant).size() == 1 &&
                         sharedAllelesMap.get(missingValuesInUnaffectedVariant).contains(1));
-        Assert.assertFalse("'Not Shared alleles' variant shouldn't pass the filter", filteredVariants.contains(notSharedAllelesVariant));
-        Assert.assertFalse("'One homozygous unaffected sample' variant shouldn't pass the filter", filteredVariants.contains(oneHomozygousUnaffectedSampleVariant));
-        Assert.assertFalse("'No alternative alleles in affected sample' variant shouldn't pass the filter", filteredVariants.contains(noAlternativeAffectedSampleVariant));
-        Assert.assertFalse("'Two homozygous affected samples not sharing alleles' variant shouldn't pass the filter", filteredVariants.contains(twoHomozygousSampleVariant));
-        Assert.assertTrue("'Affected Samples sharing one allele not homozyguos in unaffected' variant should pass the filter",
+        Assert.assertFalse(notSharedAllelesVariant +  " variant shouldn't pass the filter", filteredVariants.contains(notSharedAllelesVariant));
+        Assert.assertFalse(oneHomozygousUnaffectedSampleVariantName + " variant shouldn't pass the filter", filteredVariants.contains(oneHomozygousUnaffectedSampleVariant));
+        Assert.assertFalse(noAlternativeAffectedSampleVariantName + " variant shouldn't pass the filter", filteredVariants.contains(noAlternativeAffectedSampleVariant));
+        Assert.assertFalse(twoHomozygousSampleVariantName + " variant shouldn't pass the filter", filteredVariants.contains(twoHomozygousSampleVariant));
+        Assert.assertTrue(sharingOneAlleleVariantName + " variant should pass the filter",
                 filteredVariants.contains(sharingOneAlleleVariant) &&
                         sharedAllelesMap.get(sharingOneAlleleVariant).size() == 1 &&
                         sharedAllelesMap.get(sharingOneAlleleVariant).contains(1));
-        Assert.assertFalse("'all affected missing values' variant shouldn't pass the filter", filteredVariants.contains(allAffectedMissingValues));
-        Assert.assertTrue("'Affected Samples sharing one allele and a different allele is homozyguos in unaffected' variant should pass the filter",
+        Assert.assertFalse(allAffectedMissingValuesName + " variant shouldn't pass the filter", filteredVariants.contains(allAffectedMissingValues));
+        Assert.assertTrue(homozygousUnaffectedButNotForAffectedSharedAlleleName + " variant should pass the filter",
                 filteredVariants.contains(homozygousUnaffectedButNotForAffectedSharedAllele) &&
                         sharedAllelesMap.get(homozygousUnaffectedButNotForAffectedSharedAllele).size() == 1 &&
                         sharedAllelesMap.get(homozygousUnaffectedButNotForAffectedSharedAllele).contains(1));
-        Assert.assertTrue("'Affected Samples sharing two alleles' variant should pass the filter",
+        Assert.assertTrue(sharingTwoAllelesVariantName + " variant should pass the filter",
                 filteredVariants.contains(sharingTwoAllelesVariant) &&
                         sharedAllelesMap.get(sharingTwoAllelesVariant).size() == 2 &&
                         sharedAllelesMap.get(sharingTwoAllelesVariant).contains(1) &&
                         sharedAllelesMap.get(sharingTwoAllelesVariant).contains(2));
-        Assert.assertTrue("'Affected Samples sharing two alleles and one of them is homozyougs in some unaffected sample' variant should pass the filter",
+        Assert.assertTrue(twoSharedAllelesOneHomozygousInUnaffectedVariantName + " variant should pass the filter",
                 filteredVariants.contains(twoSharedAllelesOneHomozygousInUnaffectedVariant) &&
                         sharedAllelesMap.get(twoSharedAllelesOneHomozygousInUnaffectedVariant).size() == 1 &&
                         sharedAllelesMap.get(twoSharedAllelesOneHomozygousInUnaffectedVariant).contains(1));
-        Assert.assertFalse("'all affected share two alleles and both of them are homozygous in some unaffected sample' variant shouldn't pass the filter",
+        Assert.assertFalse(twoSharedAllelesAreHomozygousInUnaffectedVariantName + " variant shouldn't pass the filter",
                 filteredVariants.contains(twoSharedAllelesAreHomozygousInUnaffectedVariant));
     }
 
     @Test
-    public void multiVariantFilter() throws Exception {
-//        1. sharingOneAlleleVariant
-//        2. missingValuesInUnaffectedVariant
-//        3. homozygousUnaffectedButNotForAffectedSharedAllele
-//        4. sharingTwoAllelesVariant
-//        5. twoSharedAllelesOneHomozygousInUnaffectedVariant
-
-
-        // TODO: change the assertions. Now the variants wont be filtered, just annotated
-
-        // first of all, execute the 'single variant filter' step (method "affectedSamplesSharedAllelesHomozygousInUnaffectedSamplesFilter"),
-        // just to obtain the 'shared alleles map':
-        // all variants should pass the filter
+    public void annot() throws Exception {
         VariantCompoundHeterozygosityAnnotator annotator = new VariantCompoundHeterozygosityAnnotator(pedigree);
-        List<Variant> variantsToBeAnnotated = new ArrayList<>();
-        Map<Variant, Set<Integer>> sharedAllelesMap = new HashMap<>();
-        variantsToBeAnnotated.add(sharingOneAlleleVariant);
-        variantsToBeAnnotated.add(missingValuesInUnaffectedVariant);
-        variantsToBeAnnotated.add(homozygousUnaffectedButNotForAffectedSharedAllele);
-        variantsToBeAnnotated.add(sharingTwoAllelesVariant);
-        variantsToBeAnnotated.add(twoSharedAllelesOneHomozygousInUnaffectedVariant);
-        variantsToBeAnnotated.add(multiVariantFilterA);
-        variantsToBeAnnotated.add(multiVariantFilterB);
-        variantsToBeAnnotated.add(multiVariantFilterC);
-        Collection<Variant> filteredVariants = Deencapsulation.invoke(annotator, "affectedSamplesSharedAllelesHomozygousInUnaffectedSamplesFilter", variantsToBeAnnotated, sharedAllelesMap);
-        Assert.assertTrue("All variants should pass the first step filter", filteredVariants.size() == 8);
+        // use two lists of variants
+        List<Variant> testAVariants = new ArrayList<>(),
+                      testBVariants = new ArrayList<>();
+        // list A
+        testAVariants.add(annotTestVariant1);
+        testAVariants.add(annotTestVariant2);
+        testAVariants.add(annotTestVariant3);
+        testAVariants.add(annotTestVariant4);
+        // list B
+        testBVariants.add(annotTestVariant5);
+        testBVariants.add(annotTestVariant6);
+        testBVariants.add(annotTestVariant7);
 
-        // private Set<Variant> compoundHeterozygosityFilter(List<Variant> variantsToBeFiltered, Map<Variant, Set<Integer>> sharedAllelesMap);
+        // execute the annotator and print the results
+        annotator.annot(testAVariants);
+        annotator.annot(testBVariants);
+        this.printVariantsAnnotTest(testAVariants);
+        this.printVariantsAnnotTest(testBVariants);
 
-        // both variants has the affected allele present in the same unaffected sample. This pair shouldn't pass the filter
-        variantsToBeAnnotated.clear();
-        variantsToBeAnnotated.add(sharingOneAlleleVariant);
-        variantsToBeAnnotated.add(sharingTwoAllelesVariant);
-        filteredVariants = Deencapsulation.invoke(annotator, "compoundHeterozygosityFilter", variantsToBeAnnotated, sharedAllelesMap);
-        Assert.assertTrue("The unaffected sample s3 has both variants: this pair shouldn't pass the filter", filteredVariants.size() == 0);
+        // assert the results
+        String variant1CHTagValue = annotTestVariant1.getAttribute(VariantCompoundHeterozygosityAnnotator.COMPOUND_HETEROZYGOUS_TAG);
+        String variant2CHTagValue = annotTestVariant2.getAttribute(VariantCompoundHeterozygosityAnnotator.COMPOUND_HETEROZYGOUS_TAG);
+        String variant3CHTagValue = annotTestVariant3.getAttribute(VariantCompoundHeterozygosityAnnotator.COMPOUND_HETEROZYGOUS_TAG);
+        String variant4CHTagValue = annotTestVariant4.getAttribute(VariantCompoundHeterozygosityAnnotator.COMPOUND_HETEROZYGOUS_TAG);
+        String variant5CHTagValue = annotTestVariant5.getAttribute(VariantCompoundHeterozygosityAnnotator.COMPOUND_HETEROZYGOUS_TAG);
+        String variant6CHTagValue = annotTestVariant6.getAttribute(VariantCompoundHeterozygosityAnnotator.COMPOUND_HETEROZYGOUS_TAG);
+        String variant7CHTagValue = annotTestVariant7.getAttribute(VariantCompoundHeterozygosityAnnotator.COMPOUND_HETEROZYGOUS_TAG);
+        Assert.assertTrue("Variants 1 and 2 should be annotated as a 'Compound Heterozygous' pair of variants",
+                variant1CHTagValue.contains(this.getCHTag(annotTestVariant2)) && variant2CHTagValue.contains(this.getCHTag(annotTestVariant1)));
+        Assert.assertFalse("Variants 1 and 2 shouldn't be annotated as a 'Compound Heterozygous' pair of variants",
+                variant1CHTagValue.contains(this.getCHTag(annotTestVariant3)) || variant3CHTagValue.contains(this.getCHTag(annotTestVariant1)));
+        Assert.assertTrue("Variants 1 and 4 should be annotated as a 'Compound Heterozygous' pair of variants",
+                variant1CHTagValue.contains(this.getCHTag(annotTestVariant4)) && variant4CHTagValue.contains(this.getCHTag(annotTestVariant1)));
+        Assert.assertTrue("Variants 2 and 3 should be annotated as a 'Compound Heterozygous' pair of variants",
+                variant2CHTagValue.contains(this.getCHTag(annotTestVariant3)) && variant3CHTagValue.contains(this.getCHTag(annotTestVariant2)));
+        Assert.assertTrue("Variants 2 and 4 should be annotated as a 'Compound Heterozygous' pair of variants",
+                variant2CHTagValue.contains(this.getCHTag(annotTestVariant4)) && variant4CHTagValue.contains(this.getCHTag(annotTestVariant2)));
+        Assert.assertFalse("Variants 3 and 4 should be annotated as a 'Compound Heterozygous' pair of variants",
+                variant3CHTagValue.contains(this.getCHTag(annotTestVariant4)) || variant4CHTagValue.contains(this.getCHTag(annotTestVariant3)));
+        Assert.assertFalse("Variants 5 and 6 shouldn't be annotated as a 'Compound Heterozygous' pair of variants",
+                variant5CHTagValue.contains(this.getCHTag(annotTestVariant6)) || (variant6CHTagValue != null && variant6CHTagValue.contains(this.getCHTag(annotTestVariant5))));
+        Assert.assertTrue("Variants 5 and 7 should be annotated as a 'Compound Heterozygous' pair of variants",
+                variant5CHTagValue.contains(this.getCHTag(annotTestVariant7)) && variant7CHTagValue.contains(this.getCHTag(annotTestVariant5)));
+        Assert.assertFalse("Variants 6 and 7 shouldn't be annotated as a 'Compound Heterozygous' pair of variants",
+                (variant6CHTagValue != null && variant6CHTagValue.contains(this.getCHTag(annotTestVariant7))) || variant7CHTagValue.contains(this.getCHTag(annotTestVariant6)));
+    }
 
-        // one variant has an 'affected' allele in one unaffected sample, the other variant has the affected allele in other
-        // different unaffected sample. This pair should pass the filter
-        variantsToBeAnnotated.clear();
-        variantsToBeAnnotated.add(sharingOneAlleleVariant);
-        variantsToBeAnnotated.add(twoSharedAllelesOneHomozygousInUnaffectedVariant);
-        filteredVariants = Deencapsulation.invoke(annotator, "compoundHeterozygosityFilter", variantsToBeAnnotated, sharedAllelesMap);
-        Assert.assertTrue("No unaffected sample share the affected common allele of all variants: this pair should pass the filter", filteredVariants.size() == 2);
+    private String getCHTag(Variant variant) {
+        StringBuilder chTagBuilder = new StringBuilder(variant.getChromosome()).append('_').append(variant.getPosition()).append('_').append(variant.getReference()).append('_').append(variant.getAlternate());
+        return chTagBuilder.toString();
+    }
 
-        // - variante a y b no tienen los unaffected tocados -> pasan
+    private void printVariantFilterTest(Variant variant, boolean passFilter, String nameOfVariant, boolean printHeader) {
+        if (printHeader) {
+            System.out.println("\nS1*\tS2*\tS3\tS4\tShould pass filter\tName Of variant");
+            System.out.println("=======================================================================");
+        }
+        System.out.println(variant.getSampleData(sample1).get(Variant.GENOTYPE_TAG) + "\t" +
+                variant.getSampleData(sample2).get(Variant.GENOTYPE_TAG) + "\t" +
+                variant.getSampleData(sample3).get(Variant.GENOTYPE_TAG) + "\t" +
+                variant.getSampleData(sample4).get(Variant.GENOTYPE_TAG) + "\t" + passFilter + "\t\t\t\t" +nameOfVariant );
+    }
 
-        // missing values in unaffected sample, this pair should pass the filter
-        variantsToBeAnnotated.clear();
-        variantsToBeAnnotated.add(sharingOneAlleleVariant);
-        variantsToBeAnnotated.add(missingValuesInUnaffectedVariant);
-        filteredVariants = Deencapsulation.invoke(annotator, "compoundHeterozygosityFilter", variantsToBeAnnotated, sharedAllelesMap);
-        Assert.assertTrue("All unaffected individuals have missing values in one variant: this pair should pass the filter", filteredVariants.size() == 2);
+    private void printVariantsAnnotTest(List<Variant> variants) {
+        System.out.println("\nCHR\t\tPOS\tREF\tALT\tS1*\tS2*\tS3\tS4\tCH");
+        System.out.println("=======================================================================");
+        for (Variant variant: variants) {
+            System.out.println(variant.getChromosome() + "\t" + variant.getPosition() + "\t" + variant.getReference() + "\t" +
+                    variant.getAlternate() + "\t" + variant.getSampleData(sample1).get(Variant.GENOTYPE_TAG) + "\t" +
+                    variant.getSampleData(sample2).get(Variant.GENOTYPE_TAG) + "\t" +
+                    variant.getSampleData(sample3).get(Variant.GENOTYPE_TAG) + "\t" +
+                    variant.getSampleData(sample4).get(Variant.GENOTYPE_TAG) + "\t" +
+                    (variant.getAttribute(VariantCompoundHeterozygosityAnnotator.COMPOUND_HETEROZYGOUS_TAG) == null? "" : variant.getAttribute(VariantCompoundHeterozygosityAnnotator.COMPOUND_HETEROZYGOUS_TAG)));
 
-        // two combinations of affected alleles, both of them present in unaffected samples. This pair shouldn't pass the filter
-        variantsToBeAnnotated.clear();
-        variantsToBeAnnotated.add(multiVariantFilterA);
-        variantsToBeAnnotated.add(multiVariantFilterB);
-        filteredVariants = Deencapsulation.invoke(annotator, "compoundHeterozygosityFilter", variantsToBeAnnotated, sharedAllelesMap);
-        Assert.assertTrue("The unaffected sample s3 has allele combination 1-1, and unaffected sample has allele combination 2-1: this pair shouldn't pass the filter", filteredVariants.size() == 0);
-
-        // two combinations of affected alleles, but just one of them present in any unaffected samples. This pair should pass the filter
-        variantsToBeAnnotated.clear();
-        variantsToBeAnnotated.add(multiVariantFilterA);
-        variantsToBeAnnotated.add(multiVariantFilterC);
-        filteredVariants = Deencapsulation.invoke(annotator, "compoundHeterozygosityFilter", variantsToBeAnnotated, sharedAllelesMap);
-        Assert.assertTrue("Allele combination 2-1 is not in any unaffected sample: this pair should pass the filter", filteredVariants.size() == 2);
-
+        }
     }
 }

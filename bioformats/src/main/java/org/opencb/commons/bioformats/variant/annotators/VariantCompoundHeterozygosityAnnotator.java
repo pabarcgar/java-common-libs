@@ -1,11 +1,8 @@
 package org.opencb.commons.bioformats.variant.annotators;
 
-import org.opencb.commons.bioformats.feature.AllelesCode;
-import org.opencb.commons.bioformats.feature.Genotype;
 import org.opencb.commons.bioformats.pedigree.Condition;
 import org.opencb.commons.bioformats.pedigree.Pedigree;
 import org.opencb.commons.bioformats.variant.Variant;
-import org.opencb.commons.bioformats.variant.filters.VariantGeneLevelFilter;
 import org.opencb.commons.bioformats.variant.utils.VariantUtils;
 
 import java.util.*;
@@ -30,39 +27,16 @@ public class VariantCompoundHeterozygosityAnnotator implements VariantAnnotator 
 
     @Override
     public void annot(List<Variant> batch) {
-        // TODO: cambiar nombre variable y metodo
-        // TODO: list o set, y tipo de list, o null
-        List<Variant> variantsWhoPassedBothFilters = new ArrayList<>();
         Map<Variant,Set<Integer>> sharedAllelesMap = new HashMap<>();
         List<Variant> variantsWhoPassedTheFirstFilter = affectedSamplesSharedAllelesHomozygousInUnaffectedSamplesFilter(batch, sharedAllelesMap);
         if (variantsWhoPassedTheFirstFilter.size() > 1) {
-            for (Variant variant : compoundHeterozygosityFilter(variantsWhoPassedTheFirstFilter, sharedAllelesMap)) {
-                // TODO: change the annotation 'true' to a score
-                // TODO: check that the variants in the batch are actually being annotated
-                variant.addAttribute(COMPOUND_HETEROZYGOUS_TAG, "true");
-            }
+            compoundHeterozygosityAnnot(variantsWhoPassedTheFirstFilter, sharedAllelesMap);
         }
     }
 
     @Override
     public void annot(Variant elem) {
         throw new UnsupportedOperationException("Variant Compound Heterozygosity annotator cannot be applied to individual variants");
-    }
-
-    @Deprecated
-    public List<Variant> apply(List<Variant> variantsToBeFiltered) {
-        // TODO: cambiar nombre variable y metodo
-        // TODO: list o set, y tipo de list, o null
-        List<Variant> variantsWhoPassedBothFilters = new ArrayList<>();
-        Map<Variant,Set<Integer>> sharedAllelesMap = new HashMap<>();
-        List<Variant> variantsWhoPassedTheFirstFilter = affectedSamplesSharedAllelesHomozygousInUnaffectedSamplesFilter(variantsToBeFiltered, sharedAllelesMap);
-        if (variantsWhoPassedTheFirstFilter.size() > 1) {
-            variantsWhoPassedBothFilters.addAll(compoundHeterozygosityFilter(variantsWhoPassedTheFirstFilter, sharedAllelesMap));
-            // TODO: aqui habria que anotar
-            //anotame(compoundHeterozygosityFilter(variantsToBeFiltered, variantsWhoPassedTheFirstFilter, sharedAllelesMap));
-        }
-
-        return variantsWhoPassedBothFilters;
     }
 
     /**
@@ -89,16 +63,13 @@ public class VariantCompoundHeterozygosityAnnotator implements VariantAnnotator 
     }
 
 
-    private Set<Variant> compoundHeterozygosityFilter(List<Variant> variantsToBeFiltered, Map<Variant, Set<Integer>> sharedAllelesMap) {
+    private void compoundHeterozygosityAnnot(List<Variant> variantsToBeFiltered, Map<Variant, Set<Integer>> sharedAllelesMap) {
         Set<Variant> passedVariants = new HashSet<>();
         List<Variant[]> pairs = variantsPairs(variantsToBeFiltered);
         // check every possible pair to see if they pass the filter
         for (Variant[] pair : pairs) {
             Variant firstVariant = pair[0];
             Variant secondVariant = pair[1];
-            // check if both variants from the pair has already passed the filter
-            // TODO: comprobar si merece la pena hacer esta comprobacion o se esta tardando mas tiempo
-            if (!passedVariants.contains(firstVariant) || !passedVariants.contains(secondVariant)) {
                 // combinaciones de alelos entre
                 Set<Integer> allelesFirstVariant = sharedAllelesMap.get(firstVariant);
                 Set<Integer> allelesSecondVariant = sharedAllelesMap.get(secondVariant);
@@ -121,12 +92,19 @@ public class VariantCompoundHeterozygosityAnnotator implements VariantAnnotator 
                     }
                 }
                 if (validPairOfVariants) {
-                    passedVariants.add(pair[0]);
-                    passedVariants.add(pair[1]);
+                    // annotate each variant with chr_pos_ref_alt from its pair
+                    pair[0].addAttribute(COMPOUND_HETEROZYGOUS_TAG, this.getCHTagValue(pair[0], pair[1]));
+                    pair[1].addAttribute(COMPOUND_HETEROZYGOUS_TAG, this.getCHTagValue(pair[1], pair[0]));
                 }
             }
-        }
-        return passedVariants;
+    }
+
+    private String getCHTagValue(Variant variant, Variant mate) {
+        // previous tag value
+        String previousTagValue = variant.getAttribute(COMPOUND_HETEROZYGOUS_TAG);
+        StringBuilder tagValue = new StringBuilder(previousTagValue == null?"":previousTagValue + ":");
+        tagValue.append(mate.getChromosome()).append('_').append(mate.getPosition()).append('_').append(mate.getReference()).append('_').append(mate.getAlternate());
+        return tagValue.toString();
     }
 
     private List<Variant[]> variantsPairs(List<Variant> variantList) {
